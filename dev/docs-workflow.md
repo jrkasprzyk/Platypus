@@ -38,7 +38,7 @@ poetry run sphinx-build -M html docs docs/_build
 start docs\_build\html\index.html
 ```
 
-Alternative: `poetry shell` once per terminal session → then run `sphinx-autobuild docs docs/_build/html` bare (no `poetry run` prefix).
+Alternative: activate the env once per terminal — Poetry 2.0+ uses `poetry env activate` (prints the activation command, then run it); pre-2.0 used `poetry shell`. After activation, run `sphinx-autobuild docs docs/_build/html` bare.
 
 ## Git workflow
 

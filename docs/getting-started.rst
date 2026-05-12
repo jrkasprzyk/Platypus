@@ -5,14 +5,50 @@ Getting Started
 Installing Plotypus
 -------------------
 
-To install the latest version of Plotypus, run the following commands.
+Plotypus uses `Poetry <https://python-poetry.org/>`_ as its build backend and
+dependency manager.  If you don't have Poetry installed, follow the
+`installation instructions <https://python-poetry.org/docs/#installation>`_
+first.
+
+Clone the repository and install:
 
 ::
 
-   pip install -U build setuptools
    git clone https://github.com/jrkasprzyk/Plotypus.git
    cd Plotypus
-   python -m build
+   poetry install
+
+This creates a Poetry-managed virtual environment with Plotypus installed in
+editable mode and all dependencies resolved.
+
+To include the optional MPI / parallel-evaluation extras:
+
+::
+
+   poetry install --extras full
+
+Run Plotypus scripts inside the environment with ``poetry run``:
+
+::
+
+   poetry run python my_script.py
+
+Or activate the environment once per terminal session.  Poetry 2.0+ prints the
+activation command for your shell via:
+
+::
+
+   poetry env activate
+
+Copy and run the printed command to activate.  (Earlier versions of Poetry
+provided ``poetry shell`` directly; in 2.0+ this has been moved to the
+optional ``poetry-plugin-shell`` plugin.)
+
+To build a distributable wheel:
+
+::
+
+   poetry build
 
 A Simple Example
 ----------------
@@ -35,8 +71,8 @@ The output shows on each line the objectives for a Pareto optimal solution:
    [0.729124908607, 0.688608373855]
    ...
 
-If *matplotlib* is available, we can also plot the results.  Note that
-*matplotlib* must be installed separately.  Running the following code
+Plotypus includes *matplotlib* as a core dependency, so we can plot the
+results directly.  Running the following code
 
 .. literalinclude:: ../examples/plot_results.py
    :language: python
