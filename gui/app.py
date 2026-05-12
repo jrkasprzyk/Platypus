@@ -165,10 +165,10 @@ class Worker(threading.Thread):
         self.pop_size = pop_size
         self.max_nfe = max_nfe
         self.update_freq = update_freq
-        self._stop = threading.Event()
+        self._stop_event = threading.Event()
 
     def request_stop(self):
-        self._stop.set()
+        self._stop_event.set()
 
     def run(self):
         try:
@@ -176,7 +176,7 @@ class Worker(threading.Thread):
             state = {"last": 0}
 
             def cb(a):
-                if self._stop.is_set():
+                if self._stop_event.is_set():
                     raise InterruptedError
                 if a.nfe - state["last"] >= self.update_freq:
                     state["last"] = a.nfe
