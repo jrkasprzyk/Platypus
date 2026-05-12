@@ -4,14 +4,12 @@ Fork of [Platypus](https://github.com/Project-Platypus/Platypus) with a focus on
 
 ### What is Plotypus?
 
-Plotypus is a framework for evolutionary computing in Python with a focus on
-multiobjective evolutionary algorithms (MOEAs).  It differs from existing
-optimization libraries, including PyGMO, Inspyred, DEAP, and Scipy, by providing
-optimization algorithms and analysis tools for multiobjective optimization.
-It currently supports NSGA-II, NSGA-III, MOEA/D, IBEA, Epsilon-MOEA, SPEA2, GDE3,
-OMOPSO, SMPSO, and Epsilon-NSGA-II.
+Plotypus inherits rich evolutionary computing infrastructure from Platypus, which is a framework for evolutionary computing in Python with a focus on
+multiobjective evolutionary algorithms (MOEAs).
 
 ### What's different from Platypus?
+
+Plotypus is an experimental repo that adds functionality to the original Platypus including:
 
 - **Interactive GUI** — Plotypus Explorer lets you pick an algorithm and test problem,
   set parameters, and watch the Pareto front evolve live while the optimization runs.
