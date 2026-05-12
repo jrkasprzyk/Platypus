@@ -1,8 +1,6 @@
 # Plotypus
 
-[![PyPI Latest Release](https://img.shields.io/pypi/v/Plotypus.svg)](https://pypi.org/project/Plotypus/)
-
-Fork of [Platypus](https://github.com/Project-Platypus/Platypus) with visualization focus.
+Fork of [Platypus](https://github.com/Project-Platypus/Platypus) with a focus on visualization and interactive exploration.
 
 ### What is Plotypus?
 
@@ -11,53 +9,60 @@ multiobjective evolutionary algorithms (MOEAs).  It differs from existing
 optimization libraries, including PyGMO, Inspyred, DEAP, and Scipy, by providing
 optimization algorithms and analysis tools for multiobjective optimization.
 It currently supports NSGA-II, NSGA-III, MOEA/D, IBEA, Epsilon-MOEA, SPEA2, GDE3,
-OMOPSO, SMPSO, and Epsilon-NSGA-II.  For more information, see the
-[examples](examples/).
+OMOPSO, SMPSO, and Epsilon-NSGA-II.
+
+### What's different from Platypus?
+
+- **Interactive GUI** — Plotypus Explorer lets you pick an algorithm and test problem,
+  set parameters, and watch the Pareto front evolve live while the optimization runs.
+  No coding required for standard experiments.
+- **Expanded problem library** — the ZDT, WFG, UF, and CF problem families are
+  included and accessible directly from the package alongside the existing DTLZ suite.
+- **Human-in-the-loop example** — `examples/madlibs_moea.py` demonstrates using an
+  MOEA with a human as the evaluator, as a simple proof-of-concept.
 
 ### Example
 
-For example, optimizing a simple biobjective problem with a single real-valued
-decision variable is accomplished in Plotypus with:
+Optimizing a simple biobjective problem with a single real-valued decision variable:
 
 ```python
+from plotypus import NSGAII, Problem, Real
 
-    from plotypus import NSGAII, Problem, Real
+def schaffer(x):
+    return [x[0]**2, (x[0]-2)**2]
 
-    def schaffer(x):
-        return [x[0]**2, (x[0]-2)**2]
+problem = Problem(1, 2)
+problem.types[:] = Real(-10, 10)
+problem.function = schaffer
 
-    problem = Problem(1, 2)
-    problem.types[:] = Real(-10, 10)
-    problem.function = schaffer
-
-    algorithm = NSGAII(problem)
-    algorithm.run(10000)
+algorithm = NSGAII(problem)
+algorithm.run(10000)
 ```
+
+### Running the GUI
+
+```
+python gui/app.py
+```
+
+Requires `matplotlib` and `tkinter` (tkinter ships with most Python distributions).
 
 ### Installation
-
-To install the latest Plotypus release, run the following command:
-
-```
-    pip install plotypus
-```
 
 To install the latest development version of Plotypus, first install
 [Poetry](https://python-poetry.org/docs/#installation) if not already installed:
 
 ```
-    curl -sSL https://install.python-poetry.org | python3 -
+curl -sSL https://install.python-poetry.org | python3 -
 ```
 
 Then clone and install Plotypus:
 
 ```
-    git clone https://github.com/jrkasprzyk/Plotypus.git
-    cd Plotypus
-    poetry install
+git clone https://github.com/jrkasprzyk/Plotypus.git
+cd Plotypus
+poetry install
 ```
-
-For more information, see the [PyPI page](https://pypi.org/project/Plotypus/).
 
 ### Citation
 
