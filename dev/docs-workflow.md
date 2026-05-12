@@ -13,15 +13,20 @@ Notes for editing the Plotypus Sphinx/ReadTheDocs site.
 
 ## One-time setup
 
+Plotypus uses **Poetry** as its build backend and dependency manager. Install docs tooling as a dev-group dependency:
+
 ```powershell
-pip install sphinx sphinx_rtd_theme sphinx-autobuild
+poetry add --group dev sphinx sphinx_rtd_theme sphinx-autobuild
 ```
+
+If you've already cloned and run `poetry install`, the project is editable-installed in Poetry's venv, so `autodoc` can import `plotypus.*` without extra steps.
 
 ## Edit loop
 
+From the repo root:
+
 ```powershell
-cd docs
-sphinx-autobuild . _build/html
+poetry run sphinx-autobuild docs docs/_build/html
 ```
 
 Live reload at <http://127.0.0.1:8000>. Save `.rst` → browser refreshes.
@@ -29,9 +34,11 @@ Live reload at <http://127.0.0.1:8000>. Save `.rst` → browser refreshes.
 One-shot build (no watcher):
 
 ```powershell
-sphinx-build -M html . _build
-start _build\html\index.html
+poetry run sphinx-build -M html docs docs/_build
+start docs\_build\html\index.html
 ```
+
+Alternative: `poetry shell` once per terminal session → then run `sphinx-autobuild docs docs/_build/html` bare (no `poetry run` prefix).
 
 ## Git workflow
 
@@ -62,7 +69,7 @@ start _build\html\index.html
 Regenerate the API rst skeletons (only after large refactors that add/remove modules):
 
 ```powershell
-sphinx-apidoc --separate --remove-old --no-toc -o docs/api plotypus "*test*"
+poetry run sphinx-apidoc --separate --remove-old --no-toc -o docs/api plotypus "*test*"
 ```
 
 ## Authoring tool

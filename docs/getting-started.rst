@@ -59,104 +59,219 @@ operators, such as Parent-Centric Crossover (PCX):
 .. literalinclude:: ../examples/customize_variator.py
    :language: python
 
-Defining Unconstrained Problems
--------------------------------
+Defining Problems
+-----------------
 
-There are several ways to define problems in Plotypus, but all revolve around
-the ``Problem`` class.  For unconstrained problems, the problem is defined
-by a function that accepts a single argument, a list of decision variables,
-and returns a list of objective values.  For example, the bi-objective,
-Schaffer problem, defined by
+Plotypus provides three ways to define a problem.  Choosing the right one
+matters: each suits a different stage of work, and mixing them up is a common
+source of confusion for new users.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 40 40
+
+   * - Approach
+     - Use when
+     - Example
+   * - **Built-in**
+     - The problem already ships with Plotypus.  Don't reinvent standard
+       benchmark problems.
+     - ``from plotypus.problems import Schaffer``
+   * - **Function-based**
+     - Quick prototyping, single-use, no state to carry between evaluations.
+       Fastest to write.
+     - ``problem.function = my_func``
+   * - **Class-based**
+     - Reusable problem you (or others) will instantiate many times, or you
+       need to store state, parameters, or helper methods.
+     - ``class MyProblem(Problem): ...``
+
+All three center on the ``Problem`` class.  In every case you must declare:
+
+1. The number of decision variables
+2. The number of objectives
+3. The type of each decision variable (e.g. ``Real(-10, 10)``)
+4. The evaluation logic (function returning a list of objective values)
+
+The examples below all solve the same bi-objective Schaffer problem:
 
 .. math::
 
     \text{minimize } (x^2, (x-2)^2) \text{ for } x \in [-10, 10]
 
-can be programmed as follows:
+Built-in
+~~~~~~~~
 
-.. literalinclude:: ../examples/custom_problem.py
-   :language: python
+Before writing your own, check ``plotypus.problems`` for a built-in.  Standard
+benchmark problems (Schaffer, DTLZ family, ZDT family, Belegundu, and many
+others) are already implemented:
 
-When creating the ``Problem`` class, we provide two arguments: the number
-if decision variables, ``1``, and the number of objectives, ``2``.  Next, we
-specify the types of the decision variables.  In this case, we use a real-valued
-variable bounded between -10 and 10.  Finally, we define the function for
-evaluating the problem.
+.. code:: python
+
+   from plotypus import NSGAII
+   from plotypus.problems import Schaffer
+
+   algorithm = NSGAII(Schaffer())
+   algorithm.run(10000)
+
+This is the version students and reviewers should reach for first.  Reproducing
+a standard benchmark by hand is a common source of subtle bugs (wrong bounds,
+wrong objective signs).
+
+Function-based
+~~~~~~~~~~~~~~
+
+For a one-off problem, define a plain function and attach it to a ``Problem``
+instance via the ``function`` attribute:
+
+.. code:: python
+
+   from plotypus import NSGAII, Problem, Real
+
+   def schaffer(x):
+       return [x[0]**2, (x[0] - 2)**2]
+
+   problem = Problem(1, 2)
+   problem.types[:] = Real(-10, 10)
+   problem.function = schaffer
+
+   algorithm = NSGAII(problem)
+   algorithm.run(10000)
+
+The function takes a list of decision variables and returns a list of objective
+values.  ``Problem(1, 2)`` declares one decision variable and two objectives.
 
 **Tip:** The notation ``problem.types[:]`` is a shorthand way to assign all
-decision variables to the same type.  This is using Python's slice notation.
-You can also assign the type of a single decision variable, such as
-``problem.types[0]``, or any subset, such as ``problem.types[1:]``.
+decision variables to the same type, using Python's slice notation.  You can
+also assign a single type, ``problem.types[0]``, or any subset,
+``problem.types[1:]``.
 
-An equivalent but more reusable way to define this problem is extending the
-``Problem`` class.  The types are defined in the ``__init__`` method, and the
-actual evaluation is performed in the ``evaluate`` method.
+This approach is convenient but has limits: the problem is not reusable without
+re-running the setup, and you cannot easily share parameters between
+construction and evaluation.
 
-.. literalinclude:: ../examples/custom_problem.py
-   :language: python
+Class-based
+~~~~~~~~~~~
 
-Defining Constrained Problems
------------------------------
+For a reusable problem, subclass ``Problem``.  Put the type declarations in
+``__init__`` and the evaluation logic in ``evaluate``:
 
-Constrained problems are defined similarly, but must provide two additional
-pieces of information.  First, they must compute the constraint value (or values
-if the problem defines more than one constraint).  Second, they must specify
-when constraint is feasible and infeasible.  To demonstrate this, we will use
-the Belegundu problem, defined by:
+.. code:: python
+
+   from plotypus import NSGAII, Problem, Real
+
+   class Schaffer(Problem):
+       def __init__(self):
+           super().__init__(1, 2)
+           self.types[:] = Real(-10, 10)
+
+       def evaluate(self, solution):
+           x = solution.variables[0]
+           solution.objectives[:] = [x**2, (x - 2)**2]
+
+   algorithm = NSGAII(Schaffer())
+   algorithm.run(10000)
+
+Two differences from the function-based form:
+
+- ``evaluate`` receives a ``solution`` object rather than a bare list, and
+  writes the results to ``solution.objectives[:]`` instead of returning them.
+- All setup lives in ``__init__``, so the problem can be instantiated repeatedly
+  with no setup code at the call site.
+
+This is the form you'll see in ``plotypus.problems`` and the form to use when
+publishing a problem for others to reuse.
+
+Adding Constraints
+~~~~~~~~~~~~~~~~~~
+
+Constraints are not a separate kind of problem — they are two extra pieces of
+information on the same ``Problem`` class.  To add constraints you must:
+
+1. Pass the number of constraints as the third argument to ``Problem(...)``
+2. Set ``problem.constraints[:]`` to the feasibility criterion (e.g. ``"<=0"``)
+3. Return (or assign) constraint values alongside objectives
+
+To demonstrate, we use the Belegundu problem:
 
 .. math::
 
     \text{minimize } (-2x+y, 2x+y) \text{ subject to } y-x \leq 1 \text{ and } x+y \leq 7
 
-This problem has two inequality constraints.  We first simplify the constraints
-by moving the constant to the left of the inequality.  The resulting formulation
-is:
+We first simplify the constraints by moving the constant to the left of the
+inequality:
 
 .. math::
 
     \text{minimize } (-2x+y, 2x+y) \text{ subject to } y-x-1 \leq 0 \text{ and } x+y-7 \leq 0
 
-Then, we program this problem within Plotypus as follows:
+Function-based with constraints:
 
-.. literalinclude:: ../examples/constrained_problem.py
-   :language: python
+.. code:: python
 
-First, we call ``Problem(2, 2, 2)`` to create a problem with two decision
-variables, two objectives, and two constraints, respectively.  Next, we set the
-decision variable types and the constraint feasibility criteria.  The constraint
-feasibility criteria is specified as the string ``"<=0"``, meaning a
-solution is feasible if the constraint values are less than or equal to zero.
-Plotypus is flexible in how constraints are defined, and can include inequality
-and equality constraints such as ``">=0"``, ``"==0"``, or ``"!=5"``.  Finally,
-we set the evaluation function.  Note how the ``belegundu`` function returns
-a tuple (two lists) for the objectives and constraints.
+   from plotypus import NSGAII, Problem, Real
 
-The final population could contain infeasible and dominated solutions if the
-number of function evaluations was insufficient (e.g. ``algorithm.Run(100)``).
-In this case we would need to filter out the infeasible solutions:
+   def belegundu(vars):
+       x, y = vars[0], vars[1]
+       return [-2*x + y, 2*x + y], [-x + y - 1, x + y - 7]
+
+   problem = Problem(2, 2, 2)
+   problem.types[:] = [Real(0, 5), Real(0, 3)]
+   problem.constraints[:] = "<=0"
+   problem.function = belegundu
+
+   algorithm = NSGAII(problem)
+   algorithm.run(10000)
+
+``Problem(2, 2, 2)`` declares two decision variables, two objectives, and two
+constraints.  The function returns a tuple ``(objectives, constraints)`` — two
+lists.
+
+The feasibility criterion ``"<=0"`` means a solution is feasible when every
+constraint value is less than or equal to zero.  Plotypus accepts other
+operators too: ``">=0"``, ``"==0"``, ``"!=5"``.
+
+Class-based with constraints:
+
+.. code:: python
+
+   class Belegundu(Problem):
+       def __init__(self):
+           super().__init__(2, 2, 2)
+           self.types[:] = [Real(0, 5), Real(0, 3)]
+           self.constraints[:] = "<=0"
+
+       def evaluate(self, solution):
+           x = solution.variables[0]
+           y = solution.variables[1]
+           solution.objectives[:] = [-2*x + y, 2*x + y]
+           solution.constraints[:] = [-x + y - 1, x + y - 7]
+
+Same delta as the unconstrained case: ``evaluate`` writes ``solution.constraints[:]``
+instead of returning them.
+
+Filtering Results
+~~~~~~~~~~~~~~~~~
+
+When solving constrained problems, the final population may contain infeasible
+solutions (especially if the evaluation budget was small, e.g.
+``algorithm.run(100)``).  Filter them out:
 
 .. code:: python
 
    feasible_solutions = [s for s in algorithm.result if s.feasible]
 
-We could also get only the non-dominated solutions:
+You can also take only non-dominated solutions:
 
 .. code:: python
 
    nondominated_solutions = nondominated(algorithm.result)
 
+Optimization Direction
+~~~~~~~~~~~~~~~~~~~~~~
 
-Alternatively, we can develop a reusable class for this problem by extending
-the ``Problem`` class.  Like before, we move the type and constraint
-declarations to the ``__init__`` method and assign the solution's
-``constraints`` attribute in the ``evaluate`` method.
-
-.. literalinclude:: ../examples/constrained_problem.py
-   :language: python
-
-In these examples, we have assumed that the objectives are being minimized.
-Plotypus is flexible and allows the optimization direction to be changed per
-objective by setting the ``directions`` attribute.  For example:
+Plotypus minimizes objectives by default.  Override per-objective via the
+``directions`` attribute:
 
 .. code:: python
 
