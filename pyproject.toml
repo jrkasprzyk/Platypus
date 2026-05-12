@@ -23,8 +23,8 @@ classifiers = [
 packages = [{include = "plotypus"}]
 
 [tool.poetry.urls]
-Homepage = "https://github.com/jkasprzyk/Plotypus"
-Issues = "https://github.com/jkasprzyk/Plotypus/issues"
+Homepage = "https://github.com/jrkasprzyk/Plotypus"
+Issues = "https://github.com/jrkasprzyk/Plotypus/issues"
 
 [tool.poetry.dependencies]
 python = ">=3.12"

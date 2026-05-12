@@ -8,7 +8,7 @@ There are several common scenarios encountered when experimenting with MOEAs:
 2. Comparing the performance of many algorithms across one or more problems
 3. Testing the effects of different parameters
 
-Platypus provides the ``experimenter`` module with convenient routines for
+Plotypus provides the ``experimenter`` module with convenient routines for
 performing these kinds of experiments.  Furthermore, the experimenter methods
 all support parallelization.
 
@@ -64,7 +64,7 @@ Parallelization
 
 One of the major advantages to using the experimenter is that it supports
 parallelization.  In Python, there are several standards for running parallel
-jobs, such as the map function.  Platypus abstracts these different standards
+jobs, such as the map function.  Plotypus abstracts these different standards
 using the ``Evaluator`` class.  The default evaluator is the ``MapEvaluator``,
 but parallel versions including ``MultiprocessingEvaluator`` and
 ``ProcessPoolEvaluator`` may be used.

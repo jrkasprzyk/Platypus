@@ -52,19 +52,19 @@ To install the latest development version of Plotypus, first install
 Then clone and install Plotypus:
 
 ```
-    git clone https://github.com/jkasprzyk/Plotypus.git
+    git clone https://github.com/jrkasprzyk/Plotypus.git
     cd Plotypus
     poetry install
 ```
 
-For more information, see the [feedstock](https://github.com/conda-forge/platypus-opt-feedstock).
+For more information, see the [PyPI page](https://pypi.org/project/Plotypus/).
 
 ### Citation
 
-If you use this software in your work, please cite it as follows (APA style):
+If you use this software in your work, please cite the original Platypus library as follows (APA style):
 
 > Hadka, D. (2024). Platypus: A Framework for Evolutionary Computing in Python (Version 1.4.1) [Computer software].  Retrieved from https<span>://</span>github.com/Project-Platypus/Platypus.
 
 ### License
 
-Platypus is released under the GNU General Public License.
+Plotypus is released under the GNU General Public License.
