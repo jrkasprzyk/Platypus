@@ -9,14 +9,14 @@ Real valued variables are expressed as floating-point numbers between
 some minimum and maximum bounds.  For example, in the following, we
 configure the bounds as ``[-10, 10]``:
 
-.. literalinclude:: ../examples/custom_problem_function.py
+.. literalinclude:: ../examples/custom_problem.py
    :language: python
 
 Binary
 ------
 
 Binary variables store a "binary string".  Traditionally, this is
-represented as ``0`` and ``1``, but in Platypus, it is stored as an
+represented as ``0`` and ``1``, but in Plotypus, it is stored as an
 array of ``False`` and ``True`` values.  The knapsack problem demonstrates
 the binary representation, where an item is selected when the binary
 value is ``True``.  The goal, then, is to maximize the profit of the

@@ -3,10 +3,10 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "Platypus-Opt"
-version = "1.4.1"
-description = "Multiobjective optimization in Python"
-authors = ["David Hadka <dhadka@users.noreply.github.com>"]
+name = "Plotypus"
+version = "0.1.1"
+description = "Multiobjective optimization in Python with visualization"
+authors = ["David Hadka <dhadka@users.noreply.github.com>", "Joseph Kasprzyk <jkasprzyk@gmail.com>"]
 readme = "README.md"
 license = "GPL-3.0-or-later"
 keywords = ["optimization", "evolutionary algorithm"]
@@ -15,26 +15,24 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.10",
     "Operating System :: OS Independent",
     "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering",
 ]
-packages = [{include = "platypus"}]
+packages = [{include = "plotypus"}]
 
 [tool.poetry.urls]
-Homepage = "https://github.com/Project-Platypus/Platypus"
-Documentation = "https://platypus.readthedocs.io/"
-Issues = "https://github.com/Project-Platypus/Platypus/issues"
+Homepage = "https://github.com/jrkasprzyk/Plotypus"
+Issues = "https://github.com/jrkasprzyk/Plotypus/issues"
 
 [tool.poetry.dependencies]
-python = ">=3.10"
+python = ">=3.12"
 mpi4py = {version = "*", optional = true}
+parasolpy = {version = "^0.2.1", optional = true}
 
 [tool.poetry.extras]
-full = ["mpi4py"]
+full = ["mpi4py", "parasolpy"]
 
 [tool.poetry.group.test.dependencies]
 pytest = "*"
@@ -50,11 +48,11 @@ sphinx = "*"
 sphinx-rtd-theme = "*"
 
 [tool.poetry.scripts]
-platypus = "platypus.__main__:main"
+plotypus = "plotypus.__main__:main"
 
 [tool.pytest.ini_options]
 addopts = "-rA -Werror"
-testpaths = ["platypus"]
+testpaths = ["plotypus"]
 
 [tool.flake8]
 exclude = [

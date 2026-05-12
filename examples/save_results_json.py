@@ -1,4 +1,4 @@
-from platypus import DTLZ2, NSGAII, save_json
+﻿from plotypus import DTLZ2, NSGAII, save_json
 
 # Select the problem
 problem = DTLZ2()

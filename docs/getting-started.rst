@@ -2,16 +2,16 @@
 Getting Started
 ===============
 
-Installing Platypus
+Installing Plotypus
 -------------------
 
-To install the latest version of Platypus, run the following commands.
+To install the latest version of Plotypus, run the following commands.
 
 ::
 
    pip install -U build setuptools
-   git clone https://github.com/Project-Platypus/Platypus.git
-   cd Platypus
+   git clone https://github.com/jrkasprzyk/Plotypus.git
+   cd Plotypus
    python -m build
 
 A Simple Example
@@ -49,8 +49,8 @@ produce a plot similar to:
    :align: center
 
 Note that we did not need to specify many settings when constructing NSGA-II.
-For any options not specified by the user, Platypus supplies the appropriate
-settings using best practices.  In this example, Platypus inspected the
+For any options not specified by the user, Plotypus supplies the appropriate
+settings using best practices.  In this example, Plotypus inspected the
 problem definition to determine that the DTLZ2 problem consists of real-valued
 decision variables and selected the Simulated Binary Crossover (SBX) and
 Polynomial Mutation (PM) operators.  One can easily switch to using different
@@ -62,7 +62,7 @@ operators, such as Parent-Centric Crossover (PCX):
 Defining Unconstrained Problems
 -------------------------------
 
-There are several ways to define problems in Platypus, but all revolve around
+There are several ways to define problems in Plotypus, but all revolve around
 the ``Problem`` class.  For unconstrained problems, the problem is defined
 by a function that accepts a single argument, a list of decision variables,
 and returns a list of objective values.  For example, the bi-objective,
@@ -74,7 +74,7 @@ Schaffer problem, defined by
 
 can be programmed as follows:
 
-.. literalinclude:: ../examples/custom_problem_function.py
+.. literalinclude:: ../examples/custom_problem.py
    :language: python
 
 When creating the ``Problem`` class, we provide two arguments: the number
@@ -92,7 +92,7 @@ An equivalent but more reusable way to define this problem is extending the
 ``Problem`` class.  The types are defined in the ``__init__`` method, and the
 actual evaluation is performed in the ``evaluate`` method.
 
-.. literalinclude:: ../examples/custom_problem_class.py
+.. literalinclude:: ../examples/custom_problem.py
    :language: python
 
 Defining Constrained Problems
@@ -116,9 +116,9 @@ is:
 
     \text{minimize } (-2x+y, 2x+y) \text{ subject to } y-x-1 \leq 0 \text{ and } x+y-7 \leq 0
 
-Then, we program this problem within Platypus as follows:
+Then, we program this problem within Plotypus as follows:
 
-.. literalinclude:: ../examples/constrained_problem_function.py
+.. literalinclude:: ../examples/constrained_problem.py
    :language: python
 
 First, we call ``Problem(2, 2, 2)`` to create a problem with two decision
@@ -126,7 +126,7 @@ variables, two objectives, and two constraints, respectively.  Next, we set the
 decision variable types and the constraint feasibility criteria.  The constraint
 feasibility criteria is specified as the string ``"<=0"``, meaning a
 solution is feasible if the constraint values are less than or equal to zero.
-Platypus is flexible in how constraints are defined, and can include inequality
+Plotypus is flexible in how constraints are defined, and can include inequality
 and equality constraints such as ``">=0"``, ``"==0"``, or ``"!=5"``.  Finally,
 we set the evaluation function.  Note how the ``belegundu`` function returns
 a tuple (two lists) for the objectives and constraints.
@@ -151,11 +151,11 @@ the ``Problem`` class.  Like before, we move the type and constraint
 declarations to the ``__init__`` method and assign the solution's
 ``constraints`` attribute in the ``evaluate`` method.
 
-.. literalinclude:: ../examples/constrained_problem_class.py
+.. literalinclude:: ../examples/constrained_problem.py
    :language: python
 
 In these examples, we have assumed that the objectives are being minimized.
-Platypus is flexible and allows the optimization direction to be changed per
+Plotypus is flexible and allows the optimization direction to be changed per
 objective by setting the ``directions`` attribute.  For example:
 
 .. code:: python

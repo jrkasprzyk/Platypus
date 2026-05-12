@@ -1,6 +1,6 @@
-import functools
+﻿import functools
 
-from platypus import NSGAII, Problem, Real
+from plotypus import NSGAII, Problem, Real
 
 
 def problem_with_args(x, arg1, arg2=5):

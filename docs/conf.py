@@ -6,9 +6,9 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'Platypus-Opt'
-copyright = '2015-2024, David Hadka'
-author = 'David Hadka'
+project = 'Plotypus'
+copyright = '2015-2024, David Hadka; 2024-present, Joseph Kasprzyk'
+author = 'Joseph Kasprzyk'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -38,7 +38,7 @@ html_theme_options = {
 }
 
 # The initial api/ contents were created with:
-#   sphinx-apidoc --separate --remove-old --no-toc -o docs/api platypus "*test*"
+#   sphinx-apidoc --separate --remove-old --no-toc -o docs/api plotypus "*test*"
 #
 # Build these docs locally with:
 #   sphinx-build -M html . _build

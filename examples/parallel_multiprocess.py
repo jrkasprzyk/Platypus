@@ -1,4 +1,4 @@
-from platypus import DTLZ2, NSGAII, ProcessPoolEvaluator
+﻿from plotypus import DTLZ2, NSGAII, ProcessPoolEvaluator
 
 
 # simulate an computationally expensive problem

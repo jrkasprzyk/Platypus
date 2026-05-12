@@ -1,4 +1,4 @@
-from platypus import (DTLZ2, NSGAII, NSGAIII, Hypervolume, calculate, display,
+﻿from plotypus import (DTLZ2, NSGAII, NSGAIII, Hypervolume, calculate, display,
                       experiment)
 
 if __name__ == "__main__":

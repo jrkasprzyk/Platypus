@@ -1,7 +1,7 @@
-# Generates a plot showing the distributions of six real-valued operators.
+﻿# Generates a plot showing the distributions of six real-valued operators.
 import matplotlib.pyplot as plt
 
-from platypus import (PCX, PM, SBX, SPX, UM, UNDX, DifferentialEvolution,
+from plotypus import (PCX, PM, SBX, SPX, UM, UNDX, DifferentialEvolution,
                       GAOperator, Problem, Real, Solution)
 
 problem = Problem(2, 0)

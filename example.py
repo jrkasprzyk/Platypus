@@ -1,6 +1,6 @@
-import matplotlib.pyplot as plt
+﻿import matplotlib.pyplot as plt
 
-from platypus import DTLZ2, NSGAIII
+from plotypus import DTLZ2, NSGAIII
 
 # Select the problem.
 problem = DTLZ2(3)

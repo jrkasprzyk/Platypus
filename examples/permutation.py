@@ -1,4 +1,4 @@
-from platypus import (GeneticAlgorithm, Permutation, Problem, nondominated,
+﻿from plotypus import (GeneticAlgorithm, Permutation, Problem, nondominated,
                       unique)
 
 

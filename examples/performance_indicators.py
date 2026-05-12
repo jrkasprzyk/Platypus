@@ -1,4 +1,4 @@
-from platypus import (DTLZ2, NSGAII, EpsilonIndicator, GenerationalDistance,
+﻿from plotypus import (DTLZ2, NSGAII, EpsilonIndicator, GenerationalDistance,
                       Hypervolume, InvertedGenerationalDistance, Spacing,
                       load_objectives)
 

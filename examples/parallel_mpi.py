@@ -1,8 +1,8 @@
-import logging
+﻿import logging
 import sys
 
-from platypus import DTLZ2, NSGAII, PoolEvaluator
-from platypus.mpipool import MPIPool
+from plotypus import DTLZ2, NSGAII, PoolEvaluator
+from plotypus.mpipool import MPIPool
 
 logging.basicConfig(level=logging.INFO)
 

@@ -1,10 +1,7 @@
-import math
+from plotypus import GeneticAlgorithm, nondominated, unique
+from plotypus.problems import TSP
 
-from platypus import (Direction, GeneticAlgorithm, Permutation, Problem,
-                      nondominated, unique)
-
-# The (x, y) coordinates of cities in the PR76 instance.  This instance has
-# an optimal tour length of 108159.
+# PR76 instance — optimal tour length is 108159
 cities = [(3600, 2300), (3100, 3300), (4700, 5750), (5400, 5750), (5608, 7103),
           (4493, 7102), (3600, 6950), (3100, 7250), (4700, 8450), (5400, 8450),
           (5610, 10053), (4492, 10052), (3600, 10800), (3100, 10950), (4700, 11650),
@@ -22,17 +19,5 @@ cities = [(3600, 2300), (3100, 3300), (4700, 5750), (5400, 5750), (5608, 7103),
           (19800, 10000), (19800, 11900), (19800, 12200), (200, 12200), (200, 1100),
           (200, 800)]
 
-def dist(x, y):
-    return round(math.sqrt((x[0] - y[0])**2 + (x[1] - y[1])**2))
-
-def tsp(x):
-    tour = x[0]
-    return sum([dist(cities[tour[i]], cities[tour[(i + 1) % len(cities)]]) for i in range(len(tour))])
-
-problem = Problem(1, 1)
-problem.types[0] = Permutation(range(len(cities)))
-problem.directions[0] = Direction.MINIMIZE
-problem.function = tsp
-
-algorithm = GeneticAlgorithm(problem)
+algorithm = GeneticAlgorithm(TSP(cities))
 algorithm.run(100000, callback=lambda a: print(a.nfe, unique(nondominated(algorithm.result))[0].objectives[0]))

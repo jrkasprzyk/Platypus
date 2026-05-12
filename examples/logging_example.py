@@ -1,6 +1,6 @@
-import logging
+﻿import logging
 
-from platypus import DTLZ2, NSGAII
+from plotypus import DTLZ2, NSGAII
 
 # set log level so all messages are displayed
 logging.basicConfig(level=logging.DEBUG)

@@ -1,6 +1,6 @@
-import matplotlib.pyplot as plt
+﻿import matplotlib.pyplot as plt
 
-from platypus import (CMAES, DTLZ2, GDE3, IBEA, MOEAD, NSGAII, NSGAIII, OMOPSO,
+from plotypus import (CMAES, DTLZ2, GDE3, IBEA, MOEAD, NSGAII, NSGAIII, OMOPSO,
                       SMPSO, SPEA2, EpsMOEA, ProcessPoolEvaluator, experiment,
                       normal_boundary_weights)
 
