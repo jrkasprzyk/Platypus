@@ -3,6 +3,8 @@
 
 import math
 import queue
+import statistics
+import tempfile
 import threading
 import tkinter as tk
 import webbrowser
@@ -22,6 +24,24 @@ from plotypus import (
     CF1, CF2, CF3, CF4, CF5, CF6, CF7, CF8, CF9, CF10,
     Schaffer, Belegundu,
 )
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+_SUBSCRIPT_DIGITS = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
+
+
+def _subscript(n: int) -> str:
+    return str(n).translate(_SUBSCRIPT_DIGITS)
+
+
+def _hiplot_available() -> bool:
+    try:
+        import parasolpy  # noqa: F401
+        import hiplot  # noqa: F401
+        return True
+    except Exception:
+        return False
+
 
 # ── Tooltip helper ────────────────────────────────────────────────────────────
 
@@ -212,6 +232,9 @@ class App(tk.Tk):
         self._size_hist: list[int] = []
         self._max_nfe = 10000
         self._current_nobjs = 2
+        self._last_result: list[list[float]] = []
+        self._pareto_view = tk.StringVar(value="Cartesian")
+        self._progress_view = tk.StringVar(value="Cartesian")
 
         self._build_ui()
         self._build_menu()
@@ -348,29 +371,61 @@ class App(tk.Tk):
         # Tab 1 — Pareto front
         t1 = ttk.Frame(nb)
         nb.add(t1, text="  Pareto Front  ")
-        t1.rowconfigure(0, weight=1)
+        t1.rowconfigure(1, weight=1)
         t1.columnconfigure(0, weight=1)
+
+        bar1 = ttk.Frame(t1)
+        bar1.grid(row=0, column=0, sticky="ew", padx=4, pady=(4, 0))
+        ttk.Label(bar1, text="View:").pack(side="left")
+        pareto_combo = ttk.Combobox(bar1, textvariable=self._pareto_view,
+                                    values=["Cartesian", "Parallel axes"],
+                                    state="readonly", width=14)
+        pareto_combo.pack(side="left", padx=(4, 0))
+        pareto_combo.bind("<<ComboboxSelected>>", self._on_pareto_view_change)
+        Tooltip(pareto_combo, "Switch between Cartesian (scatter/line) and parallel-axes (one polyline per solution across normalized objective axes) views.")
+
+        self._hiplot_btn = ttk.Button(bar1, text="Open in HiPlot…",
+                                      command=self._open_in_hiplot)
+        self._hiplot_btn.pack(side="left", padx=(8, 0))
+        if not _hiplot_available():
+            self._hiplot_btn.configure(state="disabled")
+            Tooltip(self._hiplot_btn,
+                    "Install `parasolpy` and `hiplot` (pip install parasolpy hiplot) "
+                    "to enable interactive HiPlot export.")
+        else:
+            Tooltip(self._hiplot_btn,
+                    "Render the latest Pareto front in HiPlot and open it in your browser.")
 
         self._fig_pareto = Figure(tight_layout=True)
         self._ax_pareto = self._fig_pareto.add_subplot(111)
         canvas1 = FigureCanvasTkAgg(self._fig_pareto, master=t1)
-        canvas1.get_tk_widget().grid(row=0, column=0, sticky="nsew")
+        canvas1.get_tk_widget().grid(row=1, column=0, sticky="nsew")
         tb1 = NavigationToolbar2Tk(canvas1, t1, pack_toolbar=False)
-        tb1.grid(row=1, column=0, sticky="ew")
+        tb1.grid(row=2, column=0, sticky="ew")
         self._canvas_pareto = canvas1
 
         # Tab 2 — Progress
         t2 = ttk.Frame(nb)
         nb.add(t2, text="  Progress  ")
-        t2.rowconfigure(0, weight=1)
+        t2.rowconfigure(1, weight=1)
         t2.columnconfigure(0, weight=1)
+
+        bar2 = ttk.Frame(t2)
+        bar2.grid(row=0, column=0, sticky="ew", padx=4, pady=(4, 0))
+        ttk.Label(bar2, text="View:").pack(side="left")
+        progress_combo = ttk.Combobox(bar2, textvariable=self._progress_view,
+                                      values=["Cartesian", "Parallel axes"],
+                                      state="readonly", width=14)
+        progress_combo.pack(side="left", padx=(4, 0))
+        progress_combo.bind("<<ComboboxSelected>>", self._on_progress_view_change)
+        Tooltip(progress_combo, "Switch between Cartesian (line) and parallel-axes (per-objective min/median/max of the latest population) views.")
 
         self._fig_prog = Figure(tight_layout=True)
         self._ax_prog = self._fig_prog.add_subplot(111)
         canvas2 = FigureCanvasTkAgg(self._fig_prog, master=t2)
-        canvas2.get_tk_widget().grid(row=0, column=0, sticky="nsew")
+        canvas2.get_tk_widget().grid(row=1, column=0, sticky="nsew")
         tb2 = NavigationToolbar2Tk(canvas2, t2, pack_toolbar=False)
-        tb2.grid(row=1, column=0, sticky="ew")
+        tb2.grid(row=2, column=0, sticky="ew")
         self._canvas_prog = canvas2
 
         self._draw_placeholders()
@@ -454,6 +509,7 @@ class App(tk.Tk):
         nfe, result = msg["nfe"], msg["result"]
         self._nfe_hist.append(nfe)
         self._size_hist.append(len(result))
+        self._last_result = result
         self._progress["value"] = min(100, 100 * nfe / self._max_nfe)
         self._nfe_label.configure(text=f"NFE: {nfe:,} / {self._max_nfe:,}")
         self._redraw_pareto(result)
@@ -483,7 +539,9 @@ class App(tk.Tk):
 
     def _reset_pareto_axes(self, nobjs):
         self._fig_pareto.clear()
-        if nobjs >= 3:
+        if self._pareto_view.get() == "Parallel axes":
+            self._ax_pareto = self._fig_pareto.add_subplot(111)
+        elif nobjs >= 3:
             self._ax_pareto = self._fig_pareto.add_subplot(111, projection="3d")
         else:
             self._ax_pareto = self._fig_pareto.add_subplot(111)
@@ -491,7 +549,29 @@ class App(tk.Tk):
         self._canvas_pareto.draw()
         self._canvas_prog.draw()
 
+    # ── View-toggle handlers ──────────────────────────────────────────────────
+
+    def _on_pareto_view_change(self, _event=None):
+        if self._last_result:
+            nobjs = len(self._last_result[0])
+            is_3d = getattr(self._ax_pareto, "name", None) == "3d"
+            want_3d = self._pareto_view.get() != "Parallel axes" and nobjs >= 3
+            if want_3d != is_3d:
+                self._reset_pareto_axes(nobjs)
+        self._redraw_pareto(self._last_result)
+
+    def _on_progress_view_change(self, _event=None):
+        self._redraw_progress()
+
+    # ── Pareto dispatcher + cartesian renderer ────────────────────────────────
+
     def _redraw_pareto(self, result):
+        if self._pareto_view.get() == "Parallel axes":
+            self._redraw_pareto_parallel(result)
+        else:
+            self._redraw_pareto_cartesian(result)
+
+    def _redraw_pareto_cartesian(self, result):
         if not result:
             self._ax_pareto.clear()
             self._canvas_pareto.draw()
@@ -522,14 +602,51 @@ class App(tk.Tk):
             ax.scatter([r[0] for r in result],
                        [r[1] for r in result],
                        s=16, c=color, alpha=0.75)
-            ax.set_xlabel("f₁")
-            ax.set_ylabel("f₂")
+            ax.set_xlabel(f"f{_subscript(1)}")
+            ax.set_ylabel(f"f{_subscript(2)}")
             ax.set_title(f"Pareto Front  ·  {len(result)} solutions")
             ax.grid(True, alpha=0.25)
 
         self._canvas_pareto.draw()
 
+    def _redraw_pareto_parallel(self, result):
+        # Ensure axes are 2D for parallel view.
+        if getattr(self._ax_pareto, "name", None) == "3d":
+            nobjs = len(result[0]) if result else self._current_nobjs
+            self._reset_pareto_axes(nobjs)
+
+        ax = self._ax_pareto
+        ax.clear()
+        if not result:
+            self._canvas_pareto.draw()
+            return
+
+        # Downsample very large populations for live-update responsiveness.
+        if len(result) > 500:
+            step = max(1, len(result) // 500)
+            rows = result[::step]
+        else:
+            rows = result
+
+        nobjs = len(rows[0])
+        axis_labels = [f"f{_subscript(i + 1)}" for i in range(nobjs)]
+        self._draw_parallel_axes(
+            ax, rows, axis_labels,
+            color_by=[r[0] for r in rows],
+            cmap="viridis",
+            title=f"Pareto Front (parallel)  ·  {len(result)} solutions",
+        )
+        self._canvas_pareto.draw()
+
+    # ── Progress dispatcher + renderers ───────────────────────────────────────
+
     def _redraw_progress(self):
+        if self._progress_view.get() == "Parallel axes":
+            self._redraw_progress_parallel()
+        else:
+            self._redraw_progress_cartesian()
+
+    def _redraw_progress_cartesian(self):
         ax = self._ax_prog
         ax.clear()
         ax.plot(self._nfe_hist, self._size_hist,
@@ -541,6 +658,112 @@ class App(tk.Tk):
         ax.set_title("Pareto Front Size")
         ax.grid(True, alpha=0.25)
         self._canvas_prog.draw()
+
+    def _redraw_progress_parallel(self):
+        ax = self._ax_prog
+        ax.clear()
+        if not self._last_result:
+            self._canvas_prog.draw()
+            return
+
+        result = self._last_result
+        nobjs = len(result[0])
+        cols = [[r[j] for r in result] for j in range(nobjs)]
+        mins = [min(c) for c in cols]
+        meds = [statistics.median(c) for c in cols]
+        maxs = [max(c) for c in cols]
+        axis_labels = [f"f{_subscript(i + 1)}" for i in range(nobjs)]
+        colors = ["#2577c8", "#1e7d1e", "#b87a00"]
+
+        nfe_txt = f"{self._nfe_hist[-1]:,}" if self._nfe_hist else "—"
+        self._draw_parallel_axes(
+            ax, [mins, meds, maxs], axis_labels,
+            line_colors=colors,
+            alpha=0.9, lw=1.6,
+            title=f"Progress (parallel)  ·  NFE {nfe_txt}",
+        )
+        ax.legend(["min", "median", "max"], loc="upper right")
+        self._canvas_prog.draw()
+
+    # ── Parallel-coordinates primitive ────────────────────────────────────────
+
+    def _draw_parallel_axes(self, ax, rows, axis_labels, *, color_by=None,
+                            line_colors=None, cmap="viridis", alpha=0.5,
+                            lw=0.8, title=None):
+        rows = [list(r) for r in rows]
+        if not rows:
+            return
+        n_axes = len(axis_labels)
+        cols = [[r[j] for r in rows] for j in range(n_axes)]
+        col_min = [min(c) for c in cols]
+        col_max = [max(c) for c in cols]
+        ranges = [(hi - lo) if (hi - lo) > 1e-12 else 1e-12
+                  for lo, hi in zip(col_min, col_max)]
+
+        # Gridlines, ticks, limits.
+        for j in range(n_axes):
+            ax.axvline(j, color="#cccccc", lw=0.8, zorder=0)
+        ax.set_xticks(range(n_axes))
+        ax.set_xticklabels(axis_labels)
+        ax.set_xlim(-0.2, n_axes - 1 + 0.2)
+        ax.set_ylim(-0.05, 1.05)
+        ax.set_yticks([])
+
+        # Left-axis min/max annotations (original scale).
+        ax.text(-0.12, 0.0, f"{col_min[0]:.3g}", ha="right", va="center",
+                fontsize=8, color="#666666")
+        ax.text(-0.12, 1.0, f"{col_max[0]:.3g}", ha="right", va="center",
+                fontsize=8, color="#666666")
+
+        # Resolve per-line colors.
+        if line_colors is not None:
+            per_line = list(line_colors)
+        elif color_by is not None:
+            cb = list(color_by)
+            cb_lo, cb_hi = min(cb), max(cb)
+            cb_rng = (cb_hi - cb_lo) if (cb_hi - cb_lo) > 1e-12 else 1e-12
+            cmap_obj = matplotlib.colormaps[cmap]
+            per_line = [cmap_obj((v - cb_lo) / cb_rng) for v in cb]
+        else:
+            per_line = ["#2577c8"] * len(rows)
+
+        xs = list(range(n_axes))
+        for row, col in zip(rows, per_line):
+            normalized = [(row[j] - col_min[j]) / ranges[j] for j in range(n_axes)]
+            ax.plot(xs, normalized, color=col, alpha=alpha, lw=lw)
+
+        if title:
+            ax.set_title(title)
+
+    # ── HiPlot export ─────────────────────────────────────────────────────────
+
+    def _open_in_hiplot(self):
+        """Render the latest Pareto front in HiPlot and open it in the browser.
+
+        Assumes minimization for all objectives (consistent with Plotypus's
+        benchmark registry). If a future GUI exposes maximization problems,
+        flip the corresponding entries in `obj_directions` below.
+        """
+        if not self._last_result:
+            messagebox.showinfo("HiPlot export", "Run an algorithm first.")
+            return
+        try:
+            import pandas as pd
+            import parasolpy
+            nobjs = len(self._last_result[0])
+            cols = [f"f{i + 1}" for i in range(nobjs)]
+            df = pd.DataFrame(self._last_result, columns=cols)
+            exp = parasolpy.parallel_plot_hp(
+                df,
+                obj_names=cols,
+                obj_directions=["minimize"] * nobjs,
+            )
+            tmp = tempfile.NamedTemporaryFile(suffix=".html", delete=False)
+            tmp.close()
+            exp.to_html(tmp.name)
+            webbrowser.open(f"file:///{tmp.name}")
+        except Exception as e:
+            messagebox.showerror("HiPlot export failed", str(e))
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
